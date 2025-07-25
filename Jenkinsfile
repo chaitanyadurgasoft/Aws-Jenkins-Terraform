@@ -4,6 +4,7 @@ pipeline {
     }
     parameters {
         choice(name: 'BUILD_AMI', choices: ['yes', 'no'], description: 'Do you want to build an AMI using Packer?')
+        choice(name: 'TERRAFORM_ACTION', choices: ['apply', 'destroy'], description: 'Choose Terraform action to perform')
     }
     environment {
         PACKER_TEMPLATE = 'packer.json'
@@ -45,6 +46,30 @@ pipeline {
 
                     echo " AMI ID saved to ami.tfvars"
                     cat ami.tfvars
+                '''
+            }
+        }
+         stage('Terraform Apply') {
+            when {
+                expression { params.TERRAFORM_ACTION == 'apply' }
+            }
+            steps {
+                echo ' Running Terraform Apply...'
+                sh '''
+                    terraform init
+                    terraform plan --var-file=ami.tfvars
+                    terraform apply --auto-approve --var-file=ami.tfvars
+                '''
+            }
+        }
+        stage('Terraform Destroy') {
+            when {
+                expression { params.TERRAFORM_ACTION == 'destroy' }
+            }
+            steps {
+                echo '🧹 Destroying Terraform Infrastructure...'
+                sh '''
+                    terraform destroy --auto-approve --var-file=ami.tfvars
                 '''
             }
         }

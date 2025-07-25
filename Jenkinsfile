@@ -5,6 +5,9 @@ pipeline {
     parameters {
         choice(name: 'BUILD_AMI', choices: ['yes', 'no'], description: 'Do you want to build an AMI using Packer?')
     }
+    environment {
+        PACKER_TEMPLATE = 'packer.json'
+    }
     stages {
         stage('Checkout') {
             steps {

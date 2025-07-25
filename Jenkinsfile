@@ -26,5 +26,23 @@ pipeline {
                 }
             }
         }
+        stage('AMI Create with Packer') {
+            when {
+                expression { params.BUILD_AMI == 'yes' }
+            }
+            steps {
+                echo ' Running Packer to build AMI...'
+                sh '''
+                    packer validate --var-file packer-vars.json ${PACKER_TEMPLATE}
+                    packer build --var-file packer-vars.json ${PACKER_TEMPLATE} | tee packer_output.log
+
+                    grep -oE 'ami-[a-z0-9]+' packer_output.log | tail -1 | \
+                    awk '{print "ami = \\"" $1 "\\""}' > ami.tfvars
+
+                    echo " AMI ID saved to ami.tfvars"
+                    cat ami.tfvars
+                '''
+            }
+        }
     }
 }

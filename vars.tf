@@ -1,0 +1,10 @@
+variable "region" {}
+variable "vpc_cidr" {}
+variable "vpc_name" {}
+variable "Public_Subnet_Cidr" {}
+variable "az" {}
+variable "Private_Subnet_Cidr" {}
+variable "ami" {}
+variable "key" {}
+variable "instance_type" {}
+variable "env" {}

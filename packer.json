@@ -1,0 +1,64 @@
+{
+    "_comment": "Create a AWS AMI with Ubuntu Linux for aws B15",
+    "variables": {
+        "region": "",
+        "source_ami": "",
+        "instance_type": "",
+        "vpc_id": "",
+        "subnet_id": ""
+    },
+    "_comment1": "packer build -var \"aws_secret_key=foo\" packer.json",
+    "_comment2": "packer build -var-file packer-vars.json packer.json",
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "region": "{{user `region`}}",
+            "source_ami": "{{user `source_ami`}}",
+            "instance_type": "{{user `instance_type`}}",
+            "ssh_username": "ubuntu",
+            "ami_name": "Count-App-{{isotime | clean_resource_name}}",
+            "vpc_id": "{{user `vpc_id`}}",
+            "subnet_id": "{{user `subnet_id`}}",
+            "tags": {
+                "Name": "Count-App-{{isotime | clean_resource_name}}"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "sleep 30",
+                "sudo apt update -y",
+                "sudo apt install -y openjdk-11-jdk",
+                "sudo apt install -y maven",
+                "sudo git clone https://github.com/chaitanyadurgasoft/javamultistage.git /opt/javamultistage",
+                "cd /opt/javamultistage",
+                "sudo mvn clean package -DskipTests",
+                "sudo mv target/demo-0.0.1-SNAPSHOT.jar /opt/javamultistage/app.jar"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo '[Unit]' | sudo tee /etc/systemd/system/javamultistage.service",
+                "echo 'Description=Java Spring Boot App' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'After=network.target' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo '' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo '[Service]' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'User=ubuntu' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'ExecStart=java -jar /opt/javamultistage/app.jar' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'SuccessExitStatus=143' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'Restart=on-failure' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'RestartSec=10' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo '' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo '[Install]' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "echo 'WantedBy=multi-user.target' | sudo tee -a /etc/systemd/system/javamultistage.service",
+                "sudo systemctl daemon-reexec",
+                "sudo systemctl daemon-reload",
+                "sudo systemctl enable javamultistage.service",
+                "sudo systemctl start javamultistage.service"
+            ]
+        }
+    ]
+}

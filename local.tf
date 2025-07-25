@@ -11,6 +11,10 @@ locals {
     {
       port        = 443
       description = "port for HTTPS"
+    },
+     {
+      port        = 5600
+      description = "port for HTTPS"
     }
   ]
   ingress_rule2 = [

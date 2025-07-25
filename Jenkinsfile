@@ -94,6 +94,7 @@ pipeline {
             steps {
                 echo '🧹 Destroying Terraform Infrastructure...'
                 sh '''
+                    terraform init
                     terraform destroy --auto-approve --var-file=ami.tfvars
                 '''
             }

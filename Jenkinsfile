@@ -8,6 +8,9 @@ pipeline {
     }
     environment {
         PACKER_TEMPLATE = 'packer.json'
+        REGION = 'us-east-1'
+        AMI_NAME_PREFIX = 'Count-App'
+
     }
     stages {
         stage('Checkout') {

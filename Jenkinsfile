@@ -49,6 +49,28 @@ pipeline {
                 '''
             }
         }
+                stage('Fetch Existing AMI') {
+            when {
+                expression { params.BUILD_AMI == 'no' }
+            }
+            steps {
+                echo '🔍 Fetching latest AMI by name from AWS EC2...'
+                sh '''
+                    ami_id=$(aws ec2 describe-images \
+                        --owners self \
+                        --region ${REGION} \
+                        --filters "Name=name,Values=${AMI_NAME_PREFIX}*" "Name=state,Values=available" \
+                        --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
+                        --output text)
+
+                    echo "ami = \\"$ami_id\\"" > ami.tfvars
+
+                    echo " AMI ID from AWS: $ami_id"
+                    cat ami.tfvars
+                '''
+            }
+        }
+
          stage('Terraform Apply') {
             when {
                 expression { params.TERRAFORM_ACTION == 'apply' }
